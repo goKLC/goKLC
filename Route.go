@@ -2,7 +2,6 @@ package goKLC
 
 import (
 	"fmt"
-	"github.com/emirpasic/gods/maps/hashmap"
 	"net/http"
 	"strings"
 )
@@ -16,6 +15,15 @@ type Route struct {
 	name       string
 	controller func() string
 	group      *RouteGroup
+}
+
+func NewRouteTree() *Node {
+	return &Node{
+		key:   "",
+		route: &Route{},
+		next:  nil,
+		child: nil,
+	}
 }
 
 func NewRouteGroup() RouteGroup {
@@ -52,36 +60,36 @@ func (r Route) Group(prefix string) RouteGroup {
 
 func (r Route) Get(address string, controller func() string) {
 	if len(r.group.prefix) > 0 {
-		address = fmt.Sprintf("%s/%s", checkPrefix(r.group.prefix), address)
+		address = checkPrefix(r.group.prefix) + address
 	}
 
 	r.address = checkPrefix(address)
 	r.controller = controller
 
-	rb.Put(r.address, r)
+	path := strings.Split(r.address, "/")
+	routeTree.AddFromPath(path, &r)
 }
 
-func match(rb *hashmap.Map, request *http.Request) (Route, bool) {
+func match(request *http.Request) (*Route, bool) {
 	path := request.URL.Path
 	path = checkPrefix(path)
 
-	r, ok := rb.Get(path)
+	node := routeTree.FindFromPath(strings.Split(path, "/"))
 
-	switch r.(type) {
-	case Route:
-		return r.(Route), ok
-	default:
-		return Route{}, false
+	if node == nil || node.GetRoute() == nil {
+		return nil, false
 	}
+
+	return node.route, true
 }
 
 func checkPrefix(address string) string {
-	if !strings.HasPrefix(address, "/") {
-		return "/" + address
+	if strings.HasPrefix(address, "/") {
+		address = strings.TrimPrefix(address, "/")
 	}
 
-	if strings.HasSuffix(address, "/") {
-		address = address[:len(address)-1]
+	if !strings.HasSuffix(address, "/") {
+		address = address + "/"
 	}
 
 	return address

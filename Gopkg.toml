@@ -25,10 +25,6 @@
 #   unused-packages = true
 
 
-[[constraint]]
-  name = "github.com/emirpasic/gods"
-  version = "1.12.0"
-
 [prune]
   go-tests = true
   unused-packages = true

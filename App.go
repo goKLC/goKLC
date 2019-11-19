@@ -2,25 +2,23 @@ package goKLC
 
 import (
 	"fmt"
-	"github.com/emirpasic/gods/maps/hashmap"
 	"net/http"
 )
 
 type App struct {
 }
 
-var rb *hashmap.Map
+var routeTree *Node
 var response string
 
 func NewApp() *App {
-	rb = hashmap.New()
+	routeTree = NewRouteTree()
 
 	return &App{}
 }
 
 func (a *App) Run() {
 
-	fmt.Println(rb)
 	err := http.ListenAndServe(":8093", a)
 
 	fmt.Println(err)
@@ -35,7 +33,7 @@ func (a *App) Route() Route {
 }
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	r, ok := match(rb, req)
+	r, ok := match(req)
 
 	if !ok {
 

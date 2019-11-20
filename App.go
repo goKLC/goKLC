@@ -33,7 +33,7 @@ func (a *App) Route() Route {
 }
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	r, ok := match(req)
+	route, ok, params := match(req)
 
 	if !ok {
 
@@ -41,7 +41,7 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response = r.controller()
+	response = route.controller(req, params)
 
 	fmt.Fprintf(rw, response)
 }

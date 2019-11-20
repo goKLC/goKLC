@@ -4,18 +4,20 @@ var temp *Node
 var tempNext *Node
 
 type Node struct {
-	key   string
-	route *Route
-	next  *Node
-	child *Node
+	key     string
+	dynamic string
+	route   *Route
+	next    *Node
+	child   *Node
 }
 
 func (node *Node) AddChild(key string, route *Route) *Node {
 	node.child = &Node{
-		key:   key,
-		route: route,
-		next:  nil,
-		child: nil,
+		key:     key,
+		dynamic: checkParams(key),
+		route:   route,
+		next:    nil,
+		child:   nil,
 	}
 
 	return node.child
@@ -23,17 +25,18 @@ func (node *Node) AddChild(key string, route *Route) *Node {
 
 func (node *Node) AddNext(key string, route *Route) *Node {
 	node.next = &Node{
-		key:   key,
-		route: route,
-		next:  nil,
-		child: nil,
+		key:     key,
+		dynamic: checkParams(key),
+		route:   route,
+		next:    nil,
+		child:   nil,
 	}
 
 	return node.next
 }
 
 func (node *Node) FindNext(key string) *Node {
-	if node.key == key {
+	if node.key == key || len(node.dynamic) > 0 {
 
 		return node
 	} else if node.next != nil {
@@ -45,32 +48,38 @@ func (node *Node) FindNext(key string) *Node {
 	}
 }
 
-func (node *Node) FindFromPath(path []string) *Node {
+func (node *Node) FindFromPath(path []string) (*Node, RouteParams) {
 	temp = node.child
+	var params RouteParams = RouteParams{}
 
 	for i, key := range path {
 		if len(key) == 0 {
 			key = "/"
 		}
+
 		temp = temp.FindNext(key)
 
+		if len(temp.dynamic) > 0 {
+			params[temp.dynamic] = key
+		}
+
 		if temp == nil {
-			return nil
+			return nil, nil
 		}
 
 		if i == len(path)-1 {
 
-			return temp
+			return temp, params
 		}
 
 		temp = temp.child
 
 		if temp == nil {
-			return nil
+			return nil, nil
 		}
 	}
 
-	return temp
+	return temp, params
 }
 
 func (node *Node) AddFromPath(path []string, route *Route) {

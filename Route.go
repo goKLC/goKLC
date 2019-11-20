@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+type RouteParams map[string]string
+
 type RouteGroup struct {
 	prefix string
 }
@@ -13,7 +15,7 @@ type RouteGroup struct {
 type Route struct {
 	address    string
 	name       string
-	controller func() string
+	controller ControllerFunc
 	group      *RouteGroup
 }
 
@@ -58,7 +60,7 @@ func (r Route) Group(prefix string) RouteGroup {
 	return rg
 }
 
-func (r Route) Get(address string, controller func() string) {
+func (r Route) Get(address string, controller ControllerFunc) {
 	if len(r.group.prefix) > 0 {
 		address = checkPrefix(r.group.prefix) + address
 	}
@@ -70,17 +72,17 @@ func (r Route) Get(address string, controller func() string) {
 	routeTree.AddFromPath(path, &r)
 }
 
-func match(request *http.Request) (*Route, bool) {
+func match(request *http.Request) (*Route, bool, RouteParams) {
 	path := request.URL.Path
 	path = checkPrefix(path)
 
-	node := routeTree.FindFromPath(strings.Split(path, "/"))
+	node, params := routeTree.FindFromPath(strings.Split(path, "/"))
 
 	if node == nil || node.GetRoute() == nil {
-		return nil, false
+		return nil, false, nil
 	}
 
-	return node.route, true
+	return node.route, true, params
 }
 
 func checkPrefix(address string) string {
@@ -93,4 +95,12 @@ func checkPrefix(address string) string {
 	}
 
 	return address
+}
+
+func checkParams(path string) string {
+	if strings.HasPrefix(path, "$") {
+		return strings.TrimPrefix(path, "$")
+	}
+
+	return ""
 }

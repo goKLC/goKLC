@@ -8,7 +8,7 @@ import (
 type App struct {
 }
 
-var routeTree *Node
+var routeTree *RouteNode
 var response string
 
 func NewApp() *App {

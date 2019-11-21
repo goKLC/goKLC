@@ -19,8 +19,8 @@ type Route struct {
 	group      *RouteGroup
 }
 
-func NewRouteTree() *Node {
-	return &Node{
+func NewRouteTree() *RouteNode {
+	return &RouteNode{
 		key:   "",
 		route: &Route{},
 		next:  nil,

@@ -1,18 +1,18 @@
 package goKLC
 
-var temp *Node
-var tempNext *Node
+var temp *RouteNode
+var tempNext *RouteNode
 
-type Node struct {
+type RouteNode struct {
 	key     string
 	dynamic string
 	route   *Route
-	next    *Node
-	child   *Node
+	next    *RouteNode
+	child   *RouteNode
 }
 
-func (node *Node) AddChild(key string, route *Route) *Node {
-	node.child = &Node{
+func (node *RouteNode) AddChild(key string, route *Route) *RouteNode {
+	node.child = &RouteNode{
 		key:     key,
 		dynamic: checkParams(key),
 		route:   route,
@@ -23,8 +23,8 @@ func (node *Node) AddChild(key string, route *Route) *Node {
 	return node.child
 }
 
-func (node *Node) AddNext(key string, route *Route) *Node {
-	node.next = &Node{
+func (node *RouteNode) AddNext(key string, route *Route) *RouteNode {
+	node.next = &RouteNode{
 		key:     key,
 		dynamic: checkParams(key),
 		route:   route,
@@ -35,7 +35,7 @@ func (node *Node) AddNext(key string, route *Route) *Node {
 	return node.next
 }
 
-func (node *Node) FindNext(key string) *Node {
+func (node *RouteNode) FindNext(key string) *RouteNode {
 	if node.key == key || len(node.dynamic) > 0 {
 
 		return node
@@ -48,7 +48,7 @@ func (node *Node) FindNext(key string) *Node {
 	}
 }
 
-func (node *Node) FindFromPath(path []string) (*Node, RouteParams) {
+func (node *RouteNode) FindFromPath(path []string) (*RouteNode, RouteParams) {
 	temp = node.child
 	var params RouteParams = RouteParams{}
 
@@ -82,7 +82,7 @@ func (node *Node) FindFromPath(path []string) (*Node, RouteParams) {
 	return temp, params
 }
 
-func (node *Node) AddFromPath(path []string, route *Route) {
+func (node *RouteNode) AddFromPath(path []string, route *Route) {
 	temp = node
 
 	for i, key := range path {
@@ -113,7 +113,7 @@ func (node *Node) AddFromPath(path []string, route *Route) {
 	}
 }
 
-func (node *Node) GetRoute() *Route {
+func (node *RouteNode) GetRoute() *Route {
 
 	return node.route
 }

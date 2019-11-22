@@ -9,10 +9,12 @@ type App struct {
 }
 
 var routeTree *RouteNode
+var middlewareList *MiddlewareNode
 var response string
 
 func NewApp() *App {
 	routeTree = NewRouteTree()
+	middlewareList = NewMiddlewareNode()
 
 	return &App{}
 }
@@ -32,7 +34,19 @@ func (a *App) Route() Route {
 	return rg.Route()
 }
 
+func (a *App) Middleware(m *Middleware) {
+	if middlewareList == nil {
+		middlewareList.middleware = m
+	} else {
+		mn := NewMiddlewareNode()
+		mn.middleware = m
+
+		middlewareList.AddChild(mn)
+	}
+}
+
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	middleware := middlewareList.Handle()
 	route, ok, params := match(req)
 
 	if !ok {
@@ -42,6 +56,7 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	response = route.controller(req, params)
+	middleware.Terminate()
 
 	fmt.Fprintf(rw, response)
 }

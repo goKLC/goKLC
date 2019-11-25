@@ -38,13 +38,13 @@ func (node *MiddlewareNode) Parent() *MiddlewareNode {
 	return node.parent
 }
 
-func (node *MiddlewareNode) Handle() *MiddlewareNode {
+func (node *MiddlewareNode) Handle(request *Request) *MiddlewareNode {
 	if node.middleware != nil {
-		node.middleware.Handle()
+		node.middleware.Handle(request)
 	}
 
 	if node.child != nil {
-		return node.child.Handle()
+		return node.child.Handle(request)
 	}
 
 	return node

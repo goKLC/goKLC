@@ -1,6 +1,6 @@
 package goKLC
 
 type Middleware struct {
-	Handle    func()
+	Handle    func(request *Request)
 	Terminate func()
 }

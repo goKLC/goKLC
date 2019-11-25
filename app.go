@@ -3,6 +3,7 @@ package goKLC
 import (
 	"fmt"
 	"net/http"
+	"sync"
 )
 
 type App struct {
@@ -10,7 +11,7 @@ type App struct {
 
 var routeTree *RouteNode
 var middlewareList *MiddlewareNode
-var response string
+var mux = &sync.RWMutex{}
 
 func NewApp() *App {
 	routeTree = NewRouteTree()
@@ -46,7 +47,9 @@ func (a *App) Middleware(m *Middleware) {
 }
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	middleware := middlewareList.Handle()
+	mux.Lock()
+
+	request := NewRequest(req)
 	route, ok, params := match(req)
 
 	if !ok {
@@ -55,8 +58,11 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response = route.controller(req, params)
-	middleware.Terminate()
+	middlewareList.Handle(request)
+	response := route.controller(request, params)
 
-	fmt.Fprintf(rw, response)
+	rw.WriteHeader(response.status)
+	rw.Write([]byte(response.content))
+
+	mux.Unlock()
 }

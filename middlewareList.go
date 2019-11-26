@@ -1,7 +1,7 @@
 package goKLC
 
 type MiddlewareNode struct {
-	middleware *Middleware
+	middleware MiddlewareInterface
 	child      *MiddlewareNode
 	parent     *MiddlewareNode
 }
@@ -38,24 +38,30 @@ func (node *MiddlewareNode) Parent() *MiddlewareNode {
 	return node.parent
 }
 
-func (node *MiddlewareNode) Handle(request *Request) *MiddlewareNode {
+func (node *MiddlewareNode) Handle(request *Request) (*Response, *MiddlewareNode) {
 	if node.middleware != nil {
-		node.middleware.Handle(request)
+
+		response := node.middleware.Handle(request)
+
+		if response != nil {
+
+			return response, node
+		}
 	}
 
 	if node.child != nil {
 		return node.child.Handle(request)
 	}
 
-	return node
+	return nil, node
 }
 
-func (node *MiddlewareNode) Terminate() {
+func (node *MiddlewareNode) Terminate(response *Response) {
 	if node.middleware != nil {
-		node.middleware.Terminate()
+		node.middleware.Terminate(response)
 	}
 
 	if node.parent != nil {
-		node.parent.Terminate()
+		node.parent.Terminate(response)
 	}
 }

@@ -9,13 +9,13 @@ import (
 )
 
 type Request struct {
-	request *http.Request
+	Request *http.Request
 	form    map[string][]string
 }
 
 func NewRequest(req *http.Request) *Request {
 	r := &Request{}
-	r.request = req
+	r.Request = req
 
 	ct := req.Header.Get("Content-Type")
 	ct, _, _ = mime.ParseMediaType(ct)
@@ -37,14 +37,14 @@ func NewRequest(req *http.Request) *Request {
 
 func (r *Request) Input(key string) []string {
 
-	ct := r.request.Header.Get("Content-Type")
+	ct := r.Request.Header.Get("Content-Type")
 	ct, _, _ = mime.ParseMediaType(ct)
 
 	return r.form[key]
 }
 
 func (r *Request) Json(dataModel *interface{}) {
-	body, err := ioutil.ReadAll(r.request.Body)
+	body, err := ioutil.ReadAll(r.Request.Body)
 
 	if err != nil {
 		fmt.Println(err.Error())

@@ -35,7 +35,7 @@ func (a *App) Route() Route {
 	return rg.Route()
 }
 
-func (a *App) Middleware(m *Middleware) {
+func (a *App) Middleware(m MiddlewareInterface) {
 	if middlewareList == nil {
 		middlewareList.middleware = m
 	} else {
@@ -58,8 +58,13 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	middlewareList.Handle(request)
-	response := route.controller(request, params)
+	response, middleware := middlewareList.Handle(request)
+
+	if response == nil {
+		response = route.controller(request, params)
+	}
+
+	middleware.Terminate(response)
 
 	rw.WriteHeader(response.status)
 	rw.Write([]byte(response.content))

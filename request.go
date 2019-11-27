@@ -9,13 +9,15 @@ import (
 )
 
 type Request struct {
-	Request *http.Request
-	form    map[string][]string
+	routeParams RouteParams
+	Request     *http.Request
+	form        map[string][]string
 }
 
-func NewRequest(req *http.Request) *Request {
+func NewRequest(req *http.Request, routeParams RouteParams) *Request {
 	r := &Request{}
 	r.Request = req
+	r.routeParams = routeParams
 
 	ct := req.Header.Get("Content-Type")
 	ct, _, _ = mime.ParseMediaType(ct)
@@ -51,4 +53,9 @@ func (r *Request) Json(dataModel *interface{}) {
 	}
 
 	err = json.Unmarshal(body, &dataModel)
+}
+
+func (r *Request) GetParameter(key string) interface{} {
+
+	return r.routeParams[key]
 }

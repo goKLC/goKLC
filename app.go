@@ -54,8 +54,8 @@ func (a *App) Middleware(m MiddlewareInterface) {
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	mux.Lock()
-	request := NewRequest(req)
 	route, ok, params := match(req)
+	request := NewRequest(req, params)
 
 	if !ok {
 
@@ -66,7 +66,7 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	response, middleware := middlewareList.Handle(request)
 
 	if response == nil {
-		response = route.controller(request, params)
+		response = route.controller(request)
 	}
 
 	middleware.Terminate(response)

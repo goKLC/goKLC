@@ -6,7 +6,15 @@ import (
 	"strings"
 )
 
-type RouteParams map[string]string
+const GET Method = "GET"
+const POST Method = "POST"
+const PUT Method = "PUT"
+const PATCH Method = "PATCH"
+const DELETE Method = "DELETE"
+
+type Method string
+
+type RouteParams map[string]interface{}
 
 type RouteGroup struct {
 	prefix string
@@ -17,6 +25,7 @@ type Route struct {
 	name       string
 	controller ControllerFunc
 	group      *RouteGroup
+	method     Method
 }
 
 func NewRouteTree() *RouteNode {
@@ -67,16 +76,70 @@ func (r Route) Get(address string, controller ControllerFunc) {
 
 	r.address = checkPrefix(address)
 	r.controller = controller
+	r.method = GET
 
-	path := strings.Split(r.address, "/")
+	path := getPath(r.address, GET)
+	routeTree.AddFromPath(path, &r)
+}
+
+func (r Route) Post(address string, controller ControllerFunc) {
+	if len(r.group.prefix) > 0 {
+		address = checkPrefix(r.group.prefix) + address
+	}
+
+	r.address = checkPrefix(address)
+	r.controller = controller
+	r.method = POST
+
+	path := getPath(r.address, POST)
+	routeTree.AddFromPath(path, &r)
+}
+
+func (r Route) Put(address string, controller ControllerFunc) {
+	if len(r.group.prefix) > 0 {
+		address = checkPrefix(r.group.prefix) + address
+	}
+
+	r.address = checkPrefix(address)
+	r.controller = controller
+	r.method = PUT
+
+	path := getPath(r.address, PUT)
+	routeTree.AddFromPath(path, &r)
+}
+
+func (r Route) Patch(address string, controller ControllerFunc) {
+	if len(r.group.prefix) > 0 {
+		address = checkPrefix(r.group.prefix) + address
+	}
+
+	r.address = checkPrefix(address)
+	r.controller = controller
+	r.method = PATCH
+
+	path := getPath(r.address, PATCH)
+	routeTree.AddFromPath(path, &r)
+}
+
+func (r Route) Delete(address string, controller ControllerFunc) {
+	if len(r.group.prefix) > 0 {
+		address = checkPrefix(r.group.prefix) + address
+	}
+
+	r.address = checkPrefix(address)
+	r.controller = controller
+	r.method = DELETE
+
+	path := getPath(r.address, DELETE)
 	routeTree.AddFromPath(path, &r)
 }
 
 func match(request *http.Request) (*Route, bool, RouteParams) {
-	path := request.URL.Path
-	path = checkPrefix(path)
+	url := request.URL.Path
+	url = checkPrefix(url)
+	path := getPath(url, Method(request.Method))
 
-	node, params := routeTree.FindFromPath(strings.Split(path, "/"))
+	node, params := routeTree.FindFromPath(path)
 
 	if node == nil || node.GetRoute() == nil {
 		return nil, false, nil
@@ -103,4 +166,10 @@ func checkParams(path string) string {
 	}
 
 	return ""
+}
+
+func getPath(url string, method Method) []string {
+	url = fmt.Sprintf("%s/%s", method, url)
+
+	return strings.Split(url, "/")
 }

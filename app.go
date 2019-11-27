@@ -48,7 +48,6 @@ func (a *App) Middleware(m MiddlewareInterface) {
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	mux.Lock()
-
 	request := NewRequest(req)
 	route, ok, params := match(req)
 
@@ -69,5 +68,7 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(response.status)
 	rw.Write([]byte(response.content))
 
+	request = nil
+	response = nil
 	mux.Unlock()
 }

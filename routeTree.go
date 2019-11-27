@@ -24,12 +24,17 @@ func (node *RouteNode) AddChild(key string, route *Route) *RouteNode {
 }
 
 func (node *RouteNode) AddNext(key string, route *Route) *RouteNode {
-	node.next = &RouteNode{
-		key:     key,
-		dynamic: checkParams(key),
-		route:   route,
-		next:    nil,
-		child:   nil,
+
+	if node.next != nil {
+		return node.next.AddNext(key, route)
+	} else {
+		node.next = &RouteNode{
+			key:     key,
+			dynamic: checkParams(key),
+			route:   route,
+			next:    nil,
+			child:   nil,
+		}
 	}
 
 	return node.next
@@ -59,12 +64,12 @@ func (node *RouteNode) FindFromPath(path []string) (*RouteNode, RouteParams) {
 
 		temp = temp.FindNext(key)
 
-		if len(temp.dynamic) > 0 {
-			params[temp.dynamic] = key
-		}
-
 		if temp == nil {
 			return nil, nil
+		}
+
+		if len(temp.dynamic) > 0 {
+			params[temp.dynamic] = key
 		}
 
 		if i == len(path)-1 {

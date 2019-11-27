@@ -9,15 +9,21 @@ import (
 type App struct {
 }
 
+var app *App
 var routeTree *RouteNode
 var middlewareList *MiddlewareNode
 var mux = &sync.RWMutex{}
 
-func NewApp() *App {
-	routeTree = NewRouteTree()
-	middlewareList = NewMiddlewareNode()
+func GetApp() *App {
 
-	return &App{}
+	if app == nil {
+		routeTree = NewRouteTree()
+		middlewareList = NewMiddlewareNode()
+
+		app = &App{}
+	}
+
+	return app
 }
 
 func (a *App) Run() {

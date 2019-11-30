@@ -53,9 +53,10 @@ func (a *App) Middleware(m MiddlewareInterface) {
 }
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	mux.Lock()
 	route, ok, params := match(req)
 	request := NewRequest(req, params)
+	var response *Response
+	var middleware *MiddlewareNode
 
 	if !ok {
 
@@ -63,10 +64,24 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response, middleware := middlewareList.Handle(request)
+	response, middleware = middlewareList.Handle(request)
 
 	if response == nil {
-		response = route.controller(request)
+		if route.middleware != nil {
+
+			var rm *MiddlewareNode
+			response, rm = route.middleware.Handle(request)
+
+			if response == nil {
+				response = route.controller(request)
+			}
+
+			rm.Terminate(response)
+			rm = nil
+
+		} else {
+			response = route.controller(request)
+		}
 	}
 
 	middleware.Terminate(response)
@@ -76,5 +91,4 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	request = nil
 	response = nil
-	mux.Unlock()
 }

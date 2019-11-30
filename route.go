@@ -17,7 +17,8 @@ type Method string
 type RouteParams map[string]interface{}
 
 type RouteGroup struct {
-	prefix string
+	prefix     string
+	middleware *MiddlewareNode
 }
 
 type Route struct {
@@ -26,6 +27,7 @@ type Route struct {
 	controller ControllerFunc
 	group      *RouteGroup
 	method     Method
+	middleware *MiddlewareNode
 }
 
 func NewRouteTree() *RouteNode {
@@ -47,9 +49,13 @@ func NewRoute() Route {
 	return Route{}
 }
 
-func (rg RouteGroup) Route() Route {
+func (rg *RouteGroup) Route() Route {
 	r := NewRoute()
-	r.group = &rg
+	r.group = rg
+
+	if rg.middleware != nil {
+		r.middleware = rg.middleware
+	}
 
 	return r
 }
@@ -58,80 +64,94 @@ func (rg RouteGroup) Group(prefix string) RouteGroup {
 	newRg := NewRouteGroup()
 	newRg.prefix = fmt.Sprintf("%s/%s", checkPrefix(rg.prefix), prefix)
 
+	if rg.middleware != nil {
+		newRg.middleware = rg.middleware
+	}
+
 	return newRg
 }
 
-func (r Route) Group(prefix string) RouteGroup {
+func (r Route) Group(prefix string) *RouteGroup {
 	rg := NewRouteGroup()
 
 	rg.prefix = prefix
 
+	if r.group != nil && r.group.middleware != nil {
+
+		rg.middleware = r.group.middleware
+	}
+
+	return &rg
+}
+
+func (r Route) Get(address string, controller ControllerFunc) *Route {
+
+	return addNewRoute(r, address, controller, GET)
+}
+
+func (r Route) Post(address string, controller ControllerFunc) *Route {
+
+	return addNewRoute(r, address, controller, POST)
+}
+
+func (r Route) Put(address string, controller ControllerFunc) *Route {
+
+	return addNewRoute(r, address, controller, PUT)
+}
+
+func (r Route) Patch(address string, controller ControllerFunc) *Route {
+
+	return addNewRoute(r, address, controller, PATCH)
+}
+
+func (r Route) Delete(address string, controller ControllerFunc) *Route {
+
+	return addNewRoute(r, address, controller, DELETE)
+}
+
+func (r *Route) Middleware(m MiddlewareInterface) *Route {
+	mn := NewMiddlewareNode()
+	mn.middleware = m
+
+	if r.middleware == nil {
+		r.middleware = mn
+	} else {
+		r.middleware.AddChild(mn)
+	}
+
+	return r
+}
+
+func (rg *RouteGroup) Middleware(m MiddlewareInterface) *RouteGroup {
+	mn := NewMiddlewareNode()
+	mn.middleware = m
+
+	if rg.middleware == nil {
+		rg.middleware = mn
+	} else {
+		rg.middleware.AddChild(mn)
+	}
+
 	return rg
 }
 
-func (r Route) Get(address string, controller ControllerFunc) {
+func addNewRoute(r Route, address string, controller ControllerFunc, method Method) *Route {
 	if len(r.group.prefix) > 0 {
-		address = checkPrefix(r.group.prefix) + address
+		address = checkPrefix(r.group.prefix) + "/" + checkPrefix(address)
+	}
+
+	if r.group.middleware != nil {
+		r.middleware = r.group.middleware
 	}
 
 	r.address = checkPrefix(address)
 	r.controller = controller
-	r.method = GET
+	r.method = method
 
-	path := getPath(r.address, GET)
+	path := getPath(r.address, method)
 	routeTree.AddFromPath(path, &r)
-}
 
-func (r Route) Post(address string, controller ControllerFunc) {
-	if len(r.group.prefix) > 0 {
-		address = checkPrefix(r.group.prefix) + address
-	}
-
-	r.address = checkPrefix(address)
-	r.controller = controller
-	r.method = POST
-
-	path := getPath(r.address, POST)
-	routeTree.AddFromPath(path, &r)
-}
-
-func (r Route) Put(address string, controller ControllerFunc) {
-	if len(r.group.prefix) > 0 {
-		address = checkPrefix(r.group.prefix) + address
-	}
-
-	r.address = checkPrefix(address)
-	r.controller = controller
-	r.method = PUT
-
-	path := getPath(r.address, PUT)
-	routeTree.AddFromPath(path, &r)
-}
-
-func (r Route) Patch(address string, controller ControllerFunc) {
-	if len(r.group.prefix) > 0 {
-		address = checkPrefix(r.group.prefix) + address
-	}
-
-	r.address = checkPrefix(address)
-	r.controller = controller
-	r.method = PATCH
-
-	path := getPath(r.address, PATCH)
-	routeTree.AddFromPath(path, &r)
-}
-
-func (r Route) Delete(address string, controller ControllerFunc) {
-	if len(r.group.prefix) > 0 {
-		address = checkPrefix(r.group.prefix) + address
-	}
-
-	r.address = checkPrefix(address)
-	r.controller = controller
-	r.method = DELETE
-
-	path := getPath(r.address, DELETE)
-	routeTree.AddFromPath(path, &r)
+	return &r
 }
 
 func match(request *http.Request) (*Route, bool, RouteParams) {
@@ -153,8 +173,8 @@ func checkPrefix(address string) string {
 		address = strings.TrimPrefix(address, "/")
 	}
 
-	if !strings.HasSuffix(address, "/") {
-		address = address + "/"
+	if strings.HasSuffix(address, "/") {
+		address = strings.TrimSuffix(address, "/")
 	}
 
 	return address

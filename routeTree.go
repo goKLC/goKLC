@@ -54,14 +54,10 @@ func (node *RouteNode) FindNext(key string) *RouteNode {
 }
 
 func (node *RouteNode) FindFromPath(path []string) (*RouteNode, RouteParams) {
-	temp = node.child
+	temp = node
 	var params RouteParams = RouteParams{}
 
 	for i, key := range path {
-		if len(key) == 0 {
-			key = "/"
-		}
-
 		temp = temp.FindNext(key)
 
 		if temp == nil {
@@ -73,8 +69,7 @@ func (node *RouteNode) FindFromPath(path []string) (*RouteNode, RouteParams) {
 		}
 
 		if i == len(path)-1 {
-
-			return temp, params
+			return temp.child, params
 		}
 
 		temp = temp.child
@@ -89,32 +84,29 @@ func (node *RouteNode) FindFromPath(path []string) (*RouteNode, RouteParams) {
 
 func (node *RouteNode) AddFromPath(path []string, route *Route) {
 	temp = node
+	var r *Route
 
 	for i, key := range path {
-		if len(key) == 0 {
-			key = "/"
-		}
-
-		if temp.child != nil {
-			temp = temp.child
-			tempNext = temp.FindNext(key)
-
-			if tempNext != nil {
-				temp = tempNext
-			} else {
-				if i != len(path)-1 {
-					temp = temp.AddNext(key, nil)
-				} else {
-					temp = temp.AddNext(key, route)
-				}
-			}
+		if i == len(path)-1 {
+			r = route
 		} else {
-			if i != len(path)-1 {
-				temp = temp.AddChild(key, nil)
-			} else {
-				temp = temp.AddChild(key, route)
-			}
+			r = &Route{}
 		}
+
+		tempNext = temp.FindNext(key)
+
+		if tempNext == nil {
+			tempNext = temp.AddNext(key, &Route{})
+		}
+
+		temp = tempNext
+		tempNext = temp.child
+
+		if tempNext == nil {
+			tempNext = temp.AddChild("/", r)
+		}
+
+		temp = tempNext
 	}
 }
 

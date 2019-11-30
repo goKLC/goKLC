@@ -3,6 +3,8 @@ package goKLC
 var temp *RouteNode
 var tempNext *RouteNode
 
+type routeNameList map[string]string
+
 type RouteNode struct {
 	key     string
 	dynamic string
@@ -113,4 +115,17 @@ func (node *RouteNode) AddFromPath(path []string, route *Route) {
 func (node *RouteNode) GetRoute() *Route {
 
 	return node.route
+}
+
+func NewRouteNameList() routeNameList {
+
+	return make(map[string]string)
+}
+
+func (rn routeNameList) Add(name string, address string) {
+	rn[name] = address
+}
+
+func (rn routeNameList) Get(name string) string {
+	return rn[name]
 }

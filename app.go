@@ -13,12 +13,14 @@ var app *App
 var routeTree *RouteNode
 var middlewareList *MiddlewareNode
 var mux = &sync.RWMutex{}
+var routes routeNameList
 
 func GetApp() *App {
 
 	if app == nil {
 		routeTree = NewRouteTree()
 		middlewareList = NewMiddlewareNode()
+		routes = NewRouteNameList()
 
 		app = &App{}
 	}
@@ -39,6 +41,11 @@ func (a *App) Route() Route {
 	rg.prefix = ""
 
 	return rg.Route()
+}
+
+func GetRoute(name string) string {
+
+	return routes.Get(name)
 }
 
 func (a *App) Middleware(m MiddlewareInterface) {

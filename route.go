@@ -18,6 +18,7 @@ type RouteParams map[string]interface{}
 
 type RouteGroup struct {
 	prefix     string
+	name       string
 	middleware *MiddlewareNode
 }
 
@@ -66,6 +67,10 @@ func (rg RouteGroup) Group(prefix string) RouteGroup {
 
 	if rg.middleware != nil {
 		newRg.middleware = rg.middleware
+	}
+
+	if len(rg.name) > 0 {
+		newRg.name = rg.name
 	}
 
 	return newRg
@@ -131,6 +136,28 @@ func (rg *RouteGroup) Middleware(m MiddlewareInterface) *RouteGroup {
 	} else {
 		rg.middleware.AddChild(mn)
 	}
+
+	return rg
+}
+
+func (r *Route) Name(name string) *Route {
+	if r.group != nil && len(r.group.name) > 0 {
+		name = fmt.Sprintf("%s.%s", r.group.name, name)
+	}
+
+	r.name = name
+
+	routes.Add(r.name, r.address)
+
+	return r
+}
+
+func (rg *RouteGroup) Name(name string) *RouteGroup {
+	if len(rg.name) > 0 {
+		name = fmt.Sprintf("%s.%s", rg.name, name)
+	}
+
+	rg.name = name
 
 	return rg
 }

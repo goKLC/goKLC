@@ -24,8 +24,7 @@ func NewRequest(req *http.Request, routeParams RouteParams) *Request {
 
 	switch ct {
 	case "multipart/form-data":
-		//todo memory config
-		req.ParseMultipartForm(1024 * 1024 * 5)
+		req.ParseMultipartForm(_config.Get("MaxFormMemory", 1024*1024*5).(int64))
 		r.form = req.MultipartForm.Value
 		break
 	default:

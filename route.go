@@ -147,7 +147,7 @@ func (r *Route) Name(name string) *Route {
 
 	r.name = name
 
-	routes.Add(r.name, r.address)
+	_routeNameList.Add(r.name, r.address)
 
 	return r
 }
@@ -176,7 +176,7 @@ func addNewRoute(r Route, address string, controller ControllerFunc, method Meth
 	r.method = method
 
 	path := getPath(r.address, method)
-	routeTree.AddFromPath(path, &r)
+	_routeTree.AddFromPath(path, &r)
 
 	return &r
 }
@@ -186,7 +186,7 @@ func match(request *http.Request) (*Route, bool, RouteParams) {
 	url = checkPrefix(url)
 	path := getPath(url, Method(request.Method))
 
-	node, params := routeTree.FindFromPath(path)
+	node, params := _routeTree.FindFromPath(path)
 
 	if node == nil || node.GetRoute() == nil {
 		return nil, false, nil

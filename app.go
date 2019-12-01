@@ -3,37 +3,46 @@ package goKLC
 import (
 	"fmt"
 	"net/http"
-	"sync"
 )
 
 type App struct {
 }
 
-var app *App
-var routeTree *RouteNode
-var middlewareList *MiddlewareNode
-var mux = &sync.RWMutex{}
-var routes routeNameList
+var _app *App
+var _routeTree *RouteNode
+var _middlewareList *MiddlewareNode
+var _routeNameList routeNameList
+var _configCollector *configCollector
+var _config Config
 
 func GetApp() *App {
 
-	if app == nil {
-		routeTree = NewRouteTree()
-		middlewareList = NewMiddlewareNode()
-		routes = NewRouteNameList()
+	if _app == nil {
+		_routeTree = NewRouteTree()
+		_middlewareList = NewMiddlewareNode()
+		_routeNameList = NewRouteNameList()
+		_configCollector = newConfigCollector()
+		_config = NewConfig()
 
-		app = &App{}
+		_app = &App{}
 	}
 
-	return app
+	return _app
 }
 
 func (a *App) Run() {
 
-	err := http.ListenAndServe(":8093", a)
+	port := _config.Get("HttpPort", 8080)
+	httpAddr := fmt.Sprintf(":%d", port)
+	err := http.ListenAndServe(httpAddr, a)
 
 	fmt.Println(err)
 
+}
+
+func (a *App) Config() Config {
+
+	return NewConfig()
 }
 
 func (a *App) Route() Route {
@@ -45,17 +54,17 @@ func (a *App) Route() Route {
 
 func GetRoute(name string) string {
 
-	return routes.Get(name)
+	return _routeNameList.Get(name)
 }
 
 func (a *App) Middleware(m MiddlewareInterface) {
-	if middlewareList == nil {
-		middlewareList.middleware = m
+	if _middlewareList == nil {
+		_middlewareList.middleware = m
 	} else {
 		mn := NewMiddlewareNode()
 		mn.middleware = m
 
-		middlewareList.AddChild(mn)
+		_middlewareList.AddChild(mn)
 	}
 }
 
@@ -71,7 +80,7 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response, middleware = middlewareList.Handle(request)
+	response, middleware = _middlewareList.Handle(request)
 
 	if response == nil {
 		if route.middleware != nil {

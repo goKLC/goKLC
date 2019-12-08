@@ -1,11 +1,15 @@
 package goKLC
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 )
 
 type App struct {
+	key string
 }
 
 var _app *App
@@ -32,6 +36,7 @@ func GetApp() *App {
 
 func (a *App) Run() {
 
+	a.key = _config.Get("AppKey", "").(string)
 	port := _config.Get("HttpPort", 8080)
 	httpAddr := fmt.Sprintf(":%d", port)
 	err := http.ListenAndServe(httpAddr, a)
@@ -119,6 +124,7 @@ func writeCookies(rw http.ResponseWriter, r *Response) {
 			Name:   cookie.Name,
 			Value:  cookie.Value,
 			MaxAge: cookie.Duration,
+			Path:   cookie.Path,
 		}
 
 		http.SetCookie(rw, &c)

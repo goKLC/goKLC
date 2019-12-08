@@ -5,9 +5,6 @@ import (
 	"github.com/flosch/pongo2"
 )
 
-var fileExtension = _config.Get("ViewFileExtension", ".html")
-var fileBase = _config.Get("ViewFolder", "./View/")
-
 type Context map[string]interface{}
 
 type View struct {
@@ -31,6 +28,8 @@ func (v *View) Render() string {
 }
 
 func getFilePath(name string) string {
+	var fileExtension = _config.Get("ViewFileExtension", ".html")
+	var fileBase = _config.Get("ViewFolder", "./View/")
 
 	return fmt.Sprintf("%s%s%s", fileBase, name, fileExtension)
 }

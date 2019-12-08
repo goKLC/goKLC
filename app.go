@@ -102,9 +102,25 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	middleware.Terminate(response)
 
+	if len(response.cookies) > 0 {
+		writeCookies(rw, response)
+	}
+
 	rw.WriteHeader(response.status)
 	rw.Write([]byte(response.content))
 
 	request = nil
 	response = nil
+}
+
+func writeCookies(rw http.ResponseWriter, r *Response) {
+	for _, cookie := range r.cookies {
+		c := http.Cookie{
+			Name:   cookie.Name,
+			Value:  cookie.Value,
+			MaxAge: cookie.Duration,
+		}
+
+		http.SetCookie(rw, &c)
+	}
 }

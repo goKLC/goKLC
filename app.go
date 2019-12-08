@@ -18,6 +18,7 @@ var _middlewareList *MiddlewareNode
 var _routeNameList routeNameList
 var _configCollector *configCollector
 var _config Config
+var _sessionCollector sessionCollector
 
 func GetApp() *App {
 
@@ -27,6 +28,7 @@ func GetApp() *App {
 		_routeNameList = NewRouteNameList()
 		_configCollector = newConfigCollector()
 		_config = NewConfig()
+		_sessionCollector = newSessionCollector()
 
 		_app = &App{}
 	}
@@ -71,6 +73,16 @@ func (a *App) Middleware(m MiddlewareInterface) {
 
 		_middlewareList.AddChild(mn)
 	}
+}
+
+func (a *App) GetSessionKey() string {
+	key := make([]byte, 128)
+	if _, err := io.ReadFull(rand.Reader, key); err != nil {
+
+		fmt.Println(err)
+	}
+
+	return base64.URLEncoding.EncodeToString(key)
 }
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {

@@ -1,4 +1,4 @@
-module github.com/mkilic91/goKLC
+module github.com/goKLC/goKLC
 
 go 1.13
 

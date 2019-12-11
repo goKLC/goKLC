@@ -1,5 +1,7 @@
 package goKLC
 
+import "time"
+
 type SessionInterface interface {
 	Set(key string, value interface{})
 	Get(key string, defaultValue interface{}) interface{}
@@ -7,10 +9,12 @@ type SessionInterface interface {
 }
 
 type Session struct {
-	Id     string
-	Key    string
-	Value  interface{}
-	cookie string
+	Id          string
+	Key         string
+	Value       interface{}
+	cookie      string
+	maxDuration time.Duration
+	Duration    time.Duration
 }
 
 func NewSession(r *Request) *Session {
@@ -18,15 +22,26 @@ func NewSession(r *Request) *Session {
 	cookieName := _config.Get("SessionName", "goKLCSession").(string)
 	cookie.Get(r, cookieName)
 
-	return &Session{Id: _app.GetSessionKey(), cookie: cookie.Value}
+	session := &Session{
+		Id:          _app.GetSessionKey(),
+		cookie:      cookie.Value,
+		maxDuration: time.Second * time.Duration(cookie.Duration),
+	}
+
+	return session
 }
 
-func (s *Session) Set(key string, value interface{}) {
-	s.Key = key
-	s.Value = value
-
+func (s *Session) Set() {
 	collection := _sessionCollector.GetCollection(s.cookie)
 	collection.Set(s)
+
+	if s.Duration > 0 {
+		if s.Duration < s.maxDuration && s.Duration != 0 {
+			time.AfterFunc(s.Duration, s.Delete)
+		} else {
+			time.AfterFunc(s.maxDuration, s.Delete)
+		}
+	}
 }
 
 func (s *Session) Get(key string, defaultValue interface{}) interface{} {

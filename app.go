@@ -9,7 +9,8 @@ import (
 )
 
 type App struct {
-	key string
+	key    string
+	logger Log
 }
 
 var _app *App
@@ -43,7 +44,7 @@ func (a *App) Run() {
 	httpAddr := fmt.Sprintf(":%d", port)
 	err := http.ListenAndServe(httpAddr, a)
 
-	fmt.Println(err)
+	a.Log().Error(err.Error(), nil)
 
 }
 
@@ -79,10 +80,19 @@ func (a *App) GetSessionKey() string {
 	key := make([]byte, 128)
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
 
-		fmt.Println(err)
+		a.Log().Error(err.Error(), nil)
 	}
 
 	return base64.URLEncoding.EncodeToString(key)
+}
+
+func (a *App) SetLogger(logger Log) {
+	a.logger = logger
+}
+
+func (a *App) Log() Log {
+
+	return a.logger
 }
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {

@@ -21,7 +21,7 @@ func (v *View) Render() string {
 	content, err := template.Execute(pongo2.Context(v.Context))
 
 	if err != nil {
-		fmt.Println(err.Error())
+		_app.Log().Error(err.Error(), nil)
 	}
 
 	return content

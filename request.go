@@ -2,7 +2,6 @@ package goKLC
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"mime"
 	"net/http"
@@ -48,7 +47,7 @@ func (r *Request) Json(dataModel *interface{}) {
 	body, err := ioutil.ReadAll(r.Request.Body)
 
 	if err != nil {
-		fmt.Println(err.Error())
+		_app.Log().Error(err.Error(), nil)
 	}
 
 	err = json.Unmarshal(body, &dataModel)

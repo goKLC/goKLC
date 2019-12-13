@@ -7,9 +7,9 @@ type Config struct {
 
 type configCollector map[string]Config
 
-func newConfigCollector() *configCollector {
+func newConfigCollector() configCollector {
 
-	return &configCollector{}
+	return configCollector{}
 }
 
 func NewConfig() Config {
@@ -42,13 +42,13 @@ func (c Config) SetFromMap(config map[string]interface{}) {
 	}
 }
 
-func (cc *configCollector) Set(key string, config Config) {
+func (cc configCollector) Set(key string, config Config) {
 
-	(*cc)[key] = config
+	cc[key] = config
 }
 
-func (cc *configCollector) Get(key string) (interface{}, bool) {
-	value, found := (*cc)[key]
+func (cc configCollector) Get(key string) (interface{}, bool) {
+	value, found := cc[key]
 
 	return value, found
 }

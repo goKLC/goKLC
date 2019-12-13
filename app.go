@@ -17,7 +17,7 @@ var _app *App
 var _routeTree *RouteNode
 var _middlewareList *MiddlewareNode
 var _routeNameList routeNameList
-var _configCollector *configCollector
+var _configCollector configCollector
 var _config Config
 var _sessionCollector sessionCollector
 
@@ -30,7 +30,6 @@ func GetApp() *App {
 		_configCollector = newConfigCollector()
 		_config = NewConfig()
 		_sessionCollector = newSessionCollector()
-
 		_app = &App{}
 	}
 

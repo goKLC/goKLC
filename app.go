@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"io"
 	"net/http"
 )
@@ -20,6 +21,7 @@ var _routeNameList routeNameList
 var _configCollector configCollector
 var _config Config
 var _sessionCollector sessionCollector
+var _DB *gorm.DB
 
 func GetApp() *App {
 
@@ -92,6 +94,14 @@ func (a *App) SetLogger(logger Log) {
 func (a *App) Log() Log {
 
 	return a.logger
+}
+
+func (a *App) DB() *gorm.DB {
+	if _DB == nil {
+		connectDB(_config.Get("DBType", NONE).(DBType))
+	}
+
+	return _DB
 }
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {

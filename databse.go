@@ -1,10 +1,6 @@
 package goKLC
 
-import (
-	"fmt"
-	"github.com/goKLC/goKLC/SqlProviders"
-	"github.com/jinzhu/gorm"
-)
+import "fmt"
 
 const MYSQL DBType = "mysql"
 const POSTGRES DBType = "postgres"
@@ -14,8 +10,7 @@ const NONE DBType = "none"
 
 type DBType string
 
-func connectDB(dbType DBType) {
-	var err error
+func connectDB(dbType DBType) string {
 	var dbUrl string
 	dbUser := _config.Get("DBUser", "root")
 	dbPassword := _config.Get("DBPassword", "")
@@ -25,31 +20,18 @@ func connectDB(dbType DBType) {
 
 	switch dbType {
 	case MYSQL:
-		SqlProviders.MysqlInit()
 		dbUrl = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", dbUser, dbPassword, dbHost, dbPort, dbName)
 		break
 	case POSTGRES:
-		SqlProviders.PostgresInit()
 		dbUrl = fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s", dbHost, dbPort, dbUser, dbName, dbPassword)
 		break
 	case SQLITE3:
-		SqlProviders.SqliteInit()
 		dbUrl = fmt.Sprintf("%s", dbHost)
 		break
 	case MSSQL:
-		SqlProviders.MssqlInit()
 		dbUrl = fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=%s", dbUser, dbPassword, dbHost, dbPort, dbName)
 		break
 	}
 
-	if dbType == NONE {
-		return
-	}
-
-	_DB, err = gorm.Open(string(dbType), dbUrl)
-	_ = _DB
-
-	if err != nil {
-		_app.Log().Error(err.Error(), nil)
-	}
+	return dbUrl
 }

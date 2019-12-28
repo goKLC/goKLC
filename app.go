@@ -96,10 +96,17 @@ func (a *App) Log() Log {
 	return a.logger
 }
 
+func (a *App) GetDBURL(dbType DBType) string {
+
+	return connectDB(dbType)
+}
+
+func (a *App) SetDB(db *gorm.DB) {
+
+	_DB = db
+}
+
 func (a *App) DB() *gorm.DB {
-	if _DB == nil {
-		connectDB(_config.Get("DBType", NONE).(DBType))
-	}
 
 	return _DB
 }

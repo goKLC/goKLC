@@ -22,6 +22,7 @@ var _configCollector configCollector
 var _config Config
 var _sessionCollector sessionCollector
 var _DB *gorm.DB
+var _auth *Auth
 
 func GetApp() *App {
 
@@ -109,6 +110,15 @@ func (a *App) SetDB(db *gorm.DB) {
 func (a *App) DB() *gorm.DB {
 
 	return _DB
+}
+
+func (a *App) Auth() *Auth {
+	if _auth == nil {
+
+		_auth = &Auth{}
+	}
+
+	return _auth
 }
 
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {

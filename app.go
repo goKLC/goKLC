@@ -7,11 +7,14 @@ import (
 	"github.com/jinzhu/gorm"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type App struct {
-	key    string
-	logger Log
+	key         string
+	logger      Log
+	assetPrefix string
+	assetFolder string
 }
 
 var _app *App
@@ -121,7 +124,35 @@ func (a *App) Auth() *Auth {
 	return _auth
 }
 
+func (a *App) setAssetConf() {
+	a.assetPrefix = fmt.Sprintf("/%s", _config.Get("AssetsPrefix", "assets"))
+	a.assetFolder = fmt.Sprintf("./%s", _config.Get("AssetsFolder", "public"))
+}
+
+func (a *App) Assets(path string) string {
+	if len(a.assetPrefix) == 0 {
+		a.setAssetConf()
+	}
+
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
+	return a.assetPrefix + path
+}
+
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	if len(a.assetPrefix) == 0 {
+		a.setAssetConf()
+	}
+
+	if strings.HasPrefix(req.URL.Path, a.assetPrefix) {
+		fileServer := http.StripPrefix(a.assetPrefix, http.FileServer(http.Dir(a.assetFolder)))
+		fileServer.ServeHTTP(rw, req)
+
+		return
+	}
+
 	route, ok, params := match(req)
 	request := NewRequest(req, params)
 	var response *Response

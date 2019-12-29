@@ -17,6 +17,7 @@ func NewView(fileName string, context Context) *View {
 }
 
 func (v *View) Render() string {
+	v.Context["assets"] = _app.Assets
 	template := pongo2.Must(pongo2.FromFile(getFilePath(v.Filename)))
 	content, err := template.Execute(pongo2.Context(v.Context))
 

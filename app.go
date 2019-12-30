@@ -141,6 +141,10 @@ func (a *App) Assets(path string) string {
 	return a.assetPrefix + path
 }
 
+func (a *App) GetRouteByName(name string) string {
+	return fmt.Sprintf("%s/%s", _config.Get("AppDomain", ""), GetRoute(name))
+}
+
 func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if len(a.assetPrefix) == 0 {
 		a.setAssetConf()

@@ -13,6 +13,8 @@ import (
 type App struct {
 	key         string
 	logger      Log
+	response    Response
+	cookie      Cookie
 	assetPrefix string
 	assetFolder string
 }
@@ -100,6 +102,22 @@ func (a *App) Log() Log {
 	return a.logger
 }
 
+func (a *App) SetResponse(response Response) {
+	a.response = response
+}
+
+func (a *App) Response() Response {
+	return a.response
+}
+
+func (a *App) SetCookie(cookie Cookie) {
+	a.cookie = cookie
+}
+
+func (a *App) Cookie() Cookie {
+	return a.cookie
+}
+
 func (a *App) GetDBURL(dbType DBType) string {
 
 	return connectDB(dbType)
@@ -159,7 +177,7 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	route, ok, params := match(req)
 	request := NewRequest(req, params)
-	var response *Response
+	var response Response
 	var middleware *MiddlewareNode
 
 	if !ok {
@@ -190,24 +208,38 @@ func (a *App) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	middleware.Terminate(response)
 
-	if len(response.cookies) > 0 {
+	if len(response.GetCookies()) > 0 {
 		writeCookies(rw, response)
 	}
 
-	rw.WriteHeader(response.status)
-	rw.Write([]byte(response.content))
+	if len(response.GetHeaders()) > 0 {
+		writeHeaders(rw, response)
+	}
+
+	rw.WriteHeader(response.GetStatusCode())
+	rw.Write([]byte(response.GetBody()))
 
 	request = nil
 	response = nil
 }
 
-func writeCookies(rw http.ResponseWriter, r *Response) {
-	for _, cookie := range r.cookies {
+func writeHeaders(rw http.ResponseWriter, r Response) {
+	headers := r.GetHeaders()
+
+	for key, value := range headers {
+		rw.Header().Add(key, value)
+	}
+}
+
+func writeCookies(rw http.ResponseWriter, r Response) {
+	for _, cookie := range r.GetCookies() {
+		ck := cookie.(Cookie)
+
 		c := http.Cookie{
-			Name:   cookie.Name,
-			Value:  cookie.Value,
-			MaxAge: cookie.Duration,
-			Path:   cookie.Path,
+			Name:   ck.GetName(),
+			Value:  ck.GetValue(),
+			MaxAge: ck.GetDuration(),
+			Path:   ck.GetPath(),
 		}
 
 		http.SetCookie(rw, &c)

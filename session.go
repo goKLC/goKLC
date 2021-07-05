@@ -18,14 +18,13 @@ type Session struct {
 }
 
 func NewSession(r *Request) *Session {
-	cookie := NewCookie()
 	cookieName := _config.Get("SessionName", "goKLCSession").(string)
-	cookie.Get(r, cookieName)
+	cookie := r.GetCookie(cookieName)
 
 	session := &Session{
 		Id:          _app.GetSessionKey(),
-		cookie:      cookie.Value,
-		maxDuration: time.Second * time.Duration(cookie.Duration),
+		cookie:      cookie.GetValue(),
+		maxDuration: time.Second * time.Duration(cookie.GetDuration()),
 	}
 
 	return session

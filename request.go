@@ -57,3 +57,17 @@ func (r *Request) GetParameter(key string) interface{} {
 
 	return r.routeParams[key]
 }
+
+func (r *Request) GetCookie(name string) Cookie {
+	cookieRaw, err := r.Request.Cookie(name)
+
+	if err != nil {
+
+		return nil
+	}
+
+	cookie := _app.cookie
+	cookie.Create(cookieRaw.Name, cookieRaw.Value, cookieRaw.MaxAge, cookieRaw.Path)
+
+	return cookie
+}

@@ -38,7 +38,7 @@ func (node *MiddlewareNode) Parent() *MiddlewareNode {
 	return node.parent
 }
 
-func (node *MiddlewareNode) Handle(request *Request) (*Response, *MiddlewareNode) {
+func (node *MiddlewareNode) Handle(request *Request) (Response, *MiddlewareNode) {
 	if node.middleware != nil {
 
 		response := node.middleware.Handle(request)
@@ -56,7 +56,7 @@ func (node *MiddlewareNode) Handle(request *Request) (*Response, *MiddlewareNode
 	return nil, node
 }
 
-func (node *MiddlewareNode) Terminate(response *Response) {
+func (node *MiddlewareNode) Terminate(response Response) {
 	if node.middleware != nil {
 		node.middleware.Terminate(response)
 	}
